@@ -451,7 +451,7 @@
     });
   }
 
-  /* ---------- Shark buddy: multi-part, springs after the cursor ---------- */
+  /* ---------- Shark buddy: top-down, orbits cursor, roams the page when idle ---------- */
   const buddy = $("#buddy");
   const bubbleLayer = $("#bubbles");
 
@@ -474,28 +474,62 @@
 
   if (buddy && !reduced && finePointer && window.innerWidth > 900) {
     const wrap = $(".buddy__body-wrap", buddy);
-    const pupil = $(".buddy__pupil", buddy);
 
     let mx = window.innerWidth * 0.72;
     let my = window.innerHeight * 0.42;
     let bx = mx + 220;
     let by = my + 140;
     let vx = 0, vy = 0;
-    let facing = 1;          // 1 = right, -1 = left
-    let bank = 0;
+    let heading = 0;               // radians — full 8-way compass
     let lastMove = 0;
-    let hunting = false;
     let lunging = 0;
     let t = 0;
     let rafBuddy = 0;
+    let realHover = false;
+
+    // orbit state (active mode while cursor is moving)
+    let orbitA = Math.random() * Math.PI * 2;
+
+    // roam state (idle mode — visit on-page points of interest)
+    const POI_SEL = ".btn, .nav__links a, .footer__links a, .chip--btn, .faq__q, .mtile, .icard, .mcard, .bstat, .dentry__head";
+    let poi = null;
+    let lastPickFail = -1e9;
+
+    const clearPoi = () => {
+      if (poi && poi.el) poi.el.classList.remove("is-shark-near");
+      poi = null;
+    };
+
+    const pickPoi = (now) => {
+      const cands = [];
+      for (const el of $$(POI_SEL)) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0 && r.top > 70 && r.bottom < window.innerHeight - 30 &&
+            r.left > 0 && r.right < window.innerWidth) {
+          cands.push(el);
+        }
+      }
+      if (!cands.length) return null;
+      const el = cands[(Math.random() * cands.length) | 0];
+      const r = el.getBoundingClientRect();
+      return {
+        el,
+        x: r.left + r.width / 2,
+        y: r.top + r.height / 2,
+        w: r.width,
+        isBtn: el.classList.contains("btn") || el.classList.contains("chip--btn"),
+        bornAt: now,
+        holdUntil: 0,
+      };
+    };
 
     window.addEventListener("pointermove", (e) => {
       mx = e.clientX;
       my = e.clientY;
       lastMove = performance.now();
+      clearPoi();
     }, { passive: true });
 
-    // click anywhere → lunge burst + bubble puff
     document.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
       lunging = 1;
@@ -503,78 +537,129 @@
       spawnBubbles(e.clientX, e.clientY, 6);
     });
 
-    // hover CTAs / links → hunt posture
     document.addEventListener("pointerover", (e) => {
-      if (e.target.closest(".btn, a[href]")) {
-        hunting = true;
-        buddy.classList.add("is-hunting");
-      }
+      if (e.target.closest(".btn, a[href]")) realHover = true;
     });
     document.addEventListener("pointerout", (e) => {
       if (e.target.closest(".btn, a[href]") && !e.relatedTarget?.closest?.(".btn, a[href]")) {
-        hunting = false;
-        buddy.classList.remove("is-hunting");
+        realHover = false;
       }
     });
 
     const tickBuddy = () => {
       t += 0.016;
-      const idle = performance.now() - lastMove > 2600;
+      const now = performance.now();
+      const idle = now - lastMove > 2600;
 
       let tx, ty;
+      let mode = "orbit";
+      let arrived = false;
+
       if (idle) {
-        tx = window.innerWidth * 0.5 + Math.sin(t * 0.42) * window.innerWidth * 0.32;
-        ty = window.innerHeight * 0.55 + Math.cos(t * 0.31) * window.innerHeight * 0.2;
+        mode = "roam";
+
+        // expire / invalidate current POI
+        if (poi) {
+          const r = poi.el.getBoundingClientRect();
+          const expired = poi.holdUntil > 0 && now > poi.holdUntil;
+          const stale = now - poi.bornAt > 11000;
+          const offscreen = r.bottom < 60 || r.top > window.innerHeight - 10;
+          if (expired || stale || offscreen) clearPoi();
+        }
+
+        if (!poi) {
+          if (now - lastPickFail > 2200) {
+            poi = pickPoi(now);
+            if (!poi) lastPickFail = now;
+          }
+        }
+
+        if (poi) {
+          tx = poi.x;
+          ty = poi.y;
+
+          const dPoi = Math.hypot(poi.x - bx, poi.y - by);
+          if (dPoi < Math.max(56, poi.w * 0.55)) {
+            arrived = true;
+            if (poi.holdUntil === 0) {
+              poi.holdUntil = now + 1500 + Math.random() * 1000;
+              if (poi.isBtn) {
+                poi.el.classList.add("is-shark-near");
+                spawnBubbles(poi.x, poi.y, 5);
+              } else {
+                spawnBubbles(poi.x, poi.y, 2);
+              }
+            }
+          }
+        } else {
+          // fallback patrol when no POI in view
+          tx = window.innerWidth * 0.5 + Math.sin(t * 0.42) * window.innerWidth * 0.34;
+          ty = window.innerHeight * 0.55 + Math.cos(t * 0.31) * window.innerHeight * 0.22;
+        }
       } else {
-        tx = mx;
-        ty = my;
+        // ORBIT — circle around the cursor instead of chasing it
+        orbitA += 0.026;
+        const r = 105 + Math.sin(t * 0.55) * 34;
+        tx = mx + Math.cos(orbitA) * r;
+        ty = my + Math.sin(orbitA) * r * 0.7;
       }
 
       const dx = tx - bx;
       const dy = ty - by;
       const dist = Math.hypot(dx, dy) || 1;
 
-      // spring pursuit — strike when close, cruise otherwise, boost on lunge
-      const base = idle ? 0.011 : (dist < 170 ? 0.05 : 0.02);
+      // spring toward target — strike close, cruise far, boost on lunge
+      let base;
+      if (mode === "roam") base = arrived ? 0.004 : 0.016;
+      else base = dist < 150 ? 0.042 : 0.02;
       const speed = base * (1 + lunging * 2.2);
+
       vx += dx * speed;
       vy += dy * speed;
       vx *= 0.85;
       vy *= 0.85;
+      if (arrived) { vx *= 0.9; vy *= 0.9; }
       bx += vx;
       by += vy;
 
       lunging *= 0.92;
       if (lunging < 0.02) lunging = 0;
 
+      // --- 8-way heading: rotate nose along velocity (top-down, no flip needed) ---
       const sp = Math.hypot(vx, vy);
-      if (vx > 0.35) facing = 1;
-      else if (vx < -0.35) facing = -1;
+      const aimAt = arrived && poi ? Math.atan2(poi.y - by, poi.x - bx) : null;
 
-      // bank into the turn (clamped)
-      const targetBank = Math.max(-14, Math.min(14, vx * 0.5));
-      bank += (targetBank - bank) * 0.12;
+      if (aimAt !== null) {
+        let dA = aimAt - heading;
+        while (dA > Math.PI) dA -= Math.PI * 2;
+        while (dA < -Math.PI) dA += Math.PI * 2;
+        heading += dA * 0.07;
+      } else if (sp > 0.4) {
+        const target = Math.atan2(vy, vx);
+        let dH = target - heading;
+        while (dH > Math.PI) dH -= Math.PI * 2;
+        while (dH < -Math.PI) dH += Math.PI * 2;
+        heading += dH * 0.14;
+      }
 
-      const bob = Math.sin(t * 2.1) * 4;
+      const bob = Math.sin(t * 2.1) * 3;
+      const deg = heading * (180 / Math.PI);
 
       buddy.style.transform =
-        "translate(" + (bx - 52).toFixed(1) + "px," + (by + bob - 22).toFixed(1) + "px)";
+        "translate(" + (bx - 64).toFixed(1) + "px," + (by + bob - 34).toFixed(1) + "px)";
 
       if (wrap) {
-        wrap.style.transform =
-          "rotate(" + bank.toFixed(2) + "deg) scaleX(" + facing + ")";
+        wrap.style.transform = "rotate(" + deg.toFixed(1) + "deg)";
       }
 
-      // pupil tracks the cursor (local space accounts for flip)
-      if (pupil) {
-        const lx = Math.max(-2.2, Math.min(2.2, facing * dx * 0.012));
-        const ly = Math.max(-1.6, Math.min(1.6, dy * 0.012));
-        pupil.style.transform = "translate(" + lx.toFixed(2) + "px," + ly.toFixed(2) + "px)";
-      }
+      // hunt posture: real hover, lunge, tight orbit, or parked on a button
+      const tightOrbit = mode === "orbit" && Math.hypot(mx - bx, my - by) < 175;
+      const parkBtn = arrived && poi && poi.isBtn;
+      buddy.classList.toggle("is-hunting", !!(realHover || lunging > 0 || tightOrbit || parkBtn));
 
-      // wake trail while moving fast
-      if (sp > 2.4 && Math.random() < 0.18) {
-        spawnBubbles(bx - facing * 46, by + bob, 1);
+      // wake trail behind the tail
+      if (sp > 2.2 && Math.random() < 0.16) {
+        spawnBubbles(bx - Math.cos(heading) * 56, by - Math.sin(heading) * 56, 1);
       }
 
       rafBuddy = requestAnimationFrame(tickBuddy);

@@ -260,12 +260,12 @@ body::after {
   to   { transform: translate(var(--bx, 8px), -56px) scale(0.3); opacity: 0; }
 }
 
-/* ---------- Shark buddy (multi-part, cursor-following) ---------- */
+/* ---------- Shark buddy (top-down view, cursor-orbiting) ---------- */
 .buddy {
   position: fixed;
   top: 0; left: 0;
   z-index: -1;
-  width: 118px;
+  width: 136px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.8s ease;
@@ -273,8 +273,8 @@ body::after {
   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
 }
 
-.buddy.is-awake { opacity: 0.42; }
-.buddy.is-hunting { opacity: 0.72; }
+.buddy.is-awake { opacity: 0.46; }
+.buddy.is-hunting { opacity: 0.74; }
 
 .buddy__svg {
   width: 100%;
@@ -311,8 +311,10 @@ body::after {
   50%      { transform: rotate(-8deg); }
 }
 
-.buddy__pupil {
-  transition: transform 0.2s ease-out;
+/* button "visited by shark" glow (idle roam parks on CTAs) */
+.btn.is-shark-near {
+  border-color: var(--cobalt-accent);
+  box-shadow: 0 0 0 1px var(--line-hot), 0 14px 36px -14px var(--cobalt-glow);
 }
 
 /* ---------- Shared ---------- */

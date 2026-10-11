@@ -60,22 +60,32 @@
   <!-- bubble trail layer (buddy clicks + idle) -->
   <div class="bubbles" id="bubbles" aria-hidden="true"></div>
 
-  <!-- swimming shark buddy (cursor-following, desktop) -->
+  <!-- swimming shark buddy (top-down view, orbits cursor, roams when idle) -->
   <div class="buddy" id="buddy" aria-hidden="true">
-    <svg class="buddy__svg" viewBox="0 0 120 56">
+    <svg class="buddy__svg" viewBox="0 0 176 104">
       <g class="buddy__body-wrap">
-        <path class="buddy__tail" d="M24 28 C18 22 10 12 2 2 C8 16 10 24 12 28 C10 32 8 40 2 54 C10 44 18 34 24 28 Z" fill="#2A4070"/>
-        <path class="buddy__dorsal" d="M54 16 C58 8 66 2 72 2 C74 9 76 14 80 18 Z" fill="#2A4070"/>
-        <path class="buddy__flesh" d="M116 28 C107 17 90 11 72 10 C56 9 40 13 28 20 C23 23 20 26 19 28 C20 30 23 33 28 36 C40 43 56 47 72 46 C90 45 107 39 116 28 Z" fill="#385090"/>
-        <path class="buddy__belly" d="M116 28 C104 38 88 43 72 44 C56 45 42 42 30 36 C26 34 23 31 21 29 C40 36 56 40 72 40 C92 40 108 35 116 28 Z" fill="#5B82D6" opacity="0.35"/>
-        <path class="buddy__pectoral" d="M72 38 C68 46 60 50 50 53 C58 49 66 44 70 36 Z" fill="#2A4070"/>
-        <path d="M92 22 C93 25 93 29 92 33" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <path d="M87 21 C88 25 88 30 87 34" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <path d="M82 20 C83 25 83 31 82 35" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <path d="M112 33 C108 35 104 36 100 36" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <circle cx="102" cy="23" r="4.2" fill="#E8EEF8"/>
-        <circle class="buddy__pupil" cx="103" cy="23" r="2" fill="#0A0C10"/>
-        <circle cx="112" cy="26" r="1" fill="#1A2540" opacity="0.6"/>
+        <!-- heterocercal tail (long upper lobe) -->
+        <path class="buddy__tail" d="M27 49 C17 45 7 34 0 16 C3 32 8 45 11 51 C9 56 5 68 4 84 C13 70 21 60 27 55 Z" fill="#26396B"/>
+        <!-- dorsal fin (top edge, mid-body) -->
+        <path class="buddy__dorsal" d="M98 30 C94 18 86 8 72 2 C80 14 84 24 84 33 Z" fill="#26396B"/>
+        <!-- far pectoral (perspective: smaller) -->
+        <path d="M124 33 C114 20 100 8 80 2 C96 14 108 26 114 42 Z" fill="#2A4070"/>
+        <!-- body -->
+        <path class="buddy__flesh" d="M174 52 C165 41 150 34 130 31 C107 27 82 28 63 33 C46 37 33 43 27 48 C24 50 24 54 27 56 C33 61 46 67 63 71 C82 76 107 77 130 73 C150 70 165 63 174 52 Z" fill="#385090"/>
+        <!-- near-side highlight -->
+        <path d="M170 57 C156 66 138 71 118 73 C94 75 72 73 54 68 C42 64 33 59 28 56 C36 62 48 67 62 71 C82 76 106 77 128 74 C148 71 162 65 170 57 Z" fill="#5B82D6" opacity="0.3"/>
+        <!-- near pectoral (larger wing) -->
+        <path class="buddy__pectoral" d="M120 71 C110 86 96 97 74 103 C92 90 104 76 110 60 Z" fill="#26396B"/>
+        <!-- midline / lateral ridge -->
+        <path d="M168 52 C130 48 80 47 40 51" stroke="#1A2540" stroke-width="1.5" fill="none" opacity="0.45"/>
+        <!-- both eyes (top-down) -->
+        <circle cx="157" cy="43" r="4.5" fill="#E8EEF8"/>
+        <circle cx="158" cy="43" r="2.2" fill="#0A0C10"/>
+        <circle cx="157" cy="61" r="4.5" fill="#E8EEF8"/>
+        <circle cx="158" cy="61" r="2.2" fill="#0A0C10"/>
+        <!-- nostrils -->
+        <circle cx="170" cy="47" r="1.1" fill="#1A2540" opacity="0.7"/>
+        <circle cx="170" cy="57" r="1.1" fill="#1A2540" opacity="0.7"/>
       </g>
     </svg>
   </div>
