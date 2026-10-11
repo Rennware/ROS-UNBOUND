@@ -28,6 +28,15 @@
     }
   });
 
+  // close the burger menu if the viewport grows past the nav breakpoint
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900 && navLinks.classList.contains("is-open")) {
+      navLinks.classList.remove("is-open");
+      burger.setAttribute("aria-expanded", "false");
+      burger.setAttribute("aria-label", "Open menu");
+    }
+  });
+
   /* ---------- Scroll progress + swimming fin ---------- */
   const pFill = $("#progressFill");
   const pFin = $("#progressFin");
@@ -366,6 +375,220 @@
         card.style.setProperty("--gx", ((e.clientX - r.left) / r.width) * 100 + "%");
         card.style.setProperty("--gy", ((e.clientY - r.top) / r.height) * 100 + "%");
       });
+    });
+  }
+
+  /* ---------- Background canvas: bubbles + marine snow ---------- */
+  const canvas = $("#bgCanvas");
+  if (canvas && !reduced) {
+    const ctx = canvas.getContext("2d");
+    let w = 0, h = 0, dpr = 1;
+    let particles = [];
+    let rafBg = 0;
+
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = (w * dpr) | 0;
+      canvas.height = (h * dpr) | 0;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const target = Math.min(70, Math.max(28, Math.floor((w * h) / 26000)));
+      particles = Array.from({ length: target }, () => spawn(true));
+    };
+
+    const spawn = (anywhere) => {
+      const kind = Math.random() < 0.24 ? "bubble" : "snow";
+      return {
+        kind,
+        x: Math.random() * w,
+        y: anywhere ? Math.random() * h : h + 12,
+        r: kind === "bubble" ? 1 + Math.random() * 2.4 : 0.6 + Math.random() * 1.4,
+        spd: kind === "bubble" ? 0.25 + Math.random() * 0.55 : 0.08 + Math.random() * 0.2,
+        sway: 0.4 + Math.random() * 1.4,
+        phase: Math.random() * Math.PI * 2,
+        alpha: kind === "bubble" ? 0.10 + Math.random() * 0.16 : 0.06 + Math.random() * 0.12,
+      };
+    };
+
+    let tBg = 0;
+    const draw = () => {
+      tBg += 0.016;
+      ctx.clearRect(0, 0, w, h);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.y -= p.spd;
+        const ox = Math.sin(tBg * 0.7 + p.phase) * p.sway;
+        if (p.y < -14) {
+          particles[i] = spawn(false);
+          continue;
+        }
+        if (p.kind === "bubble") {
+          ctx.beginPath();
+          ctx.arc(p.x + ox, p.y, p.r, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(150,180,235," + p.alpha + ")";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x + ox, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(180,200,240," + p.alpha + ")";
+          ctx.fill();
+        }
+      }
+      rafBg = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafBg);
+      } else {
+        rafBg = requestAnimationFrame(draw);
+      }
+    });
+  }
+
+  /* ---------- Shark buddy: multi-part, springs after the cursor ---------- */
+  const buddy = $("#buddy");
+  const bubbleLayer = $("#bubbles");
+
+  const spawnBubbles = (x, y, n) => {
+    if (!bubbleLayer || reduced) return;
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement("span");
+      b.className = "bubble";
+      const s = 4 + Math.random() * 9;
+      b.style.width = s.toFixed(1) + "px";
+      b.style.height = s.toFixed(1) + "px";
+      b.style.left = (x + (Math.random() * 28 - 14)).toFixed(0) + "px";
+      b.style.top = (y + (Math.random() * 18 - 9)).toFixed(0) + "px";
+      b.style.setProperty("--bx", (Math.random() * 34 - 17).toFixed(0) + "px");
+      b.style.animationDuration = (0.85 + Math.random() * 0.85).toFixed(2) + "s";
+      bubbleLayer.appendChild(b);
+      b.addEventListener("animationend", () => b.remove(), { once: true });
+    }
+  };
+
+  if (buddy && !reduced && finePointer && window.innerWidth > 900) {
+    const wrap = $(".buddy__body-wrap", buddy);
+    const pupil = $(".buddy__pupil", buddy);
+
+    let mx = window.innerWidth * 0.72;
+    let my = window.innerHeight * 0.42;
+    let bx = mx + 220;
+    let by = my + 140;
+    let vx = 0, vy = 0;
+    let facing = 1;          // 1 = right, -1 = left
+    let bank = 0;
+    let lastMove = 0;
+    let hunting = false;
+    let lunging = 0;
+    let t = 0;
+    let rafBuddy = 0;
+
+    window.addEventListener("pointermove", (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      lastMove = performance.now();
+    }, { passive: true });
+
+    // click anywhere → lunge burst + bubble puff
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      lunging = 1;
+      lastMove = performance.now();
+      spawnBubbles(e.clientX, e.clientY, 6);
+    });
+
+    // hover CTAs / links → hunt posture
+    document.addEventListener("pointerover", (e) => {
+      if (e.target.closest(".btn, a[href]")) {
+        hunting = true;
+        buddy.classList.add("is-hunting");
+      }
+    });
+    document.addEventListener("pointerout", (e) => {
+      if (e.target.closest(".btn, a[href]") && !e.relatedTarget?.closest?.(".btn, a[href]")) {
+        hunting = false;
+        buddy.classList.remove("is-hunting");
+      }
+    });
+
+    const tickBuddy = () => {
+      t += 0.016;
+      const idle = performance.now() - lastMove > 2600;
+
+      let tx, ty;
+      if (idle) {
+        tx = window.innerWidth * 0.5 + Math.sin(t * 0.42) * window.innerWidth * 0.32;
+        ty = window.innerHeight * 0.55 + Math.cos(t * 0.31) * window.innerHeight * 0.2;
+      } else {
+        tx = mx;
+        ty = my;
+      }
+
+      const dx = tx - bx;
+      const dy = ty - by;
+      const dist = Math.hypot(dx, dy) || 1;
+
+      // spring pursuit — strike when close, cruise otherwise, boost on lunge
+      const base = idle ? 0.011 : (dist < 170 ? 0.05 : 0.02);
+      const speed = base * (1 + lunging * 2.2);
+      vx += dx * speed;
+      vy += dy * speed;
+      vx *= 0.85;
+      vy *= 0.85;
+      bx += vx;
+      by += vy;
+
+      lunging *= 0.92;
+      if (lunging < 0.02) lunging = 0;
+
+      const sp = Math.hypot(vx, vy);
+      if (vx > 0.35) facing = 1;
+      else if (vx < -0.35) facing = -1;
+
+      // bank into the turn (clamped)
+      const targetBank = Math.max(-14, Math.min(14, vx * 0.5));
+      bank += (targetBank - bank) * 0.12;
+
+      const bob = Math.sin(t * 2.1) * 4;
+
+      buddy.style.transform =
+        "translate(" + (bx - 52).toFixed(1) + "px," + (by + bob - 22).toFixed(1) + "px)";
+
+      if (wrap) {
+        wrap.style.transform =
+          "rotate(" + bank.toFixed(2) + "deg) scaleX(" + facing + ")";
+      }
+
+      // pupil tracks the cursor (local space accounts for flip)
+      if (pupil) {
+        const lx = Math.max(-2.2, Math.min(2.2, facing * dx * 0.012));
+        const ly = Math.max(-1.6, Math.min(1.6, dy * 0.012));
+        pupil.style.transform = "translate(" + lx.toFixed(2) + "px," + ly.toFixed(2) + "px)";
+      }
+
+      // wake trail while moving fast
+      if (sp > 2.4 && Math.random() < 0.18) {
+        spawnBubbles(bx - facing * 46, by + bob, 1);
+      }
+
+      rafBuddy = requestAnimationFrame(tickBuddy);
+    };
+
+    setTimeout(() => buddy.classList.add("is-awake"), 1600);
+    rafBuddy = requestAnimationFrame(tickBuddy);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafBuddy);
+      } else {
+        rafBuddy = requestAnimationFrame(tickBuddy);
+      }
     });
   }
 })();

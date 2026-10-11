@@ -34,6 +34,9 @@
       <symbol id="i-fin" viewBox="0 0 44 30">
         <path d="M1 29 C10 27 17 20 22 8 C24 4 27 1 30 1 C30 8 32 16 36 22 C38 25 41 28 43 29 Z" fill="currentColor"/>
       </symbol>
+      <symbol id="i-shark" viewBox="0 0 120 56">
+        <path d="M8 30 C20 22 38 18 58 18 C62 12 68 6 74 2 C72 10 72 16 74 20 C90 22 104 28 118 30 C104 32 90 38 74 40 C72 44 72 50 74 54 C68 50 62 44 58 38 C38 38 20 34 8 30 Z" fill="currentColor"/>
+      </symbol>
     </defs>
   </svg>
 
@@ -43,10 +46,38 @@
     <svg class="progress__fin" id="progressFin"><use href="#i-fin"/></svg>
   </div>
 
+  <!-- deep-water background stack -->
   <div class="bg" aria-hidden="true">
     <div class="bg__glow bg__glow--a"></div>
     <div class="bg__glow bg__glow--b"></div>
+    <div class="bg__aurora"></div>
+    <canvas class="bg__canvas" id="bgCanvas"></canvas>
+    <div class="bg__shaft bg__shaft--a"></div>
+    <div class="bg__shaft bg__shaft--b"></div>
     <div class="bg__grid"></div>
+  </div>
+
+  <!-- bubble trail layer (buddy clicks + idle) -->
+  <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+
+  <!-- swimming shark buddy (cursor-following, desktop) -->
+  <div class="buddy" id="buddy" aria-hidden="true">
+    <svg class="buddy__svg" viewBox="0 0 120 56">
+      <g class="buddy__body-wrap">
+        <path class="buddy__tail" d="M24 28 C18 22 10 12 2 2 C8 16 10 24 12 28 C10 32 8 40 2 54 C10 44 18 34 24 28 Z" fill="#2A4070"/>
+        <path class="buddy__dorsal" d="M54 16 C58 8 66 2 72 2 C74 9 76 14 80 18 Z" fill="#2A4070"/>
+        <path class="buddy__flesh" d="M116 28 C107 17 90 11 72 10 C56 9 40 13 28 20 C23 23 20 26 19 28 C20 30 23 33 28 36 C40 43 56 47 72 46 C90 45 107 39 116 28 Z" fill="#385090"/>
+        <path class="buddy__belly" d="M116 28 C104 38 88 43 72 44 C56 45 42 42 30 36 C26 34 23 31 21 29 C40 36 56 40 72 40 C92 40 108 35 116 28 Z" fill="#5B82D6" opacity="0.35"/>
+        <path class="buddy__pectoral" d="M72 38 C68 46 60 50 50 53 C58 49 66 44 70 36 Z" fill="#2A4070"/>
+        <path d="M92 22 C93 25 93 29 92 33" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M87 21 C88 25 88 30 87 34" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M82 20 C83 25 83 31 82 35" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M112 33 C108 35 104 36 100 36" stroke="#1A2540" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <circle cx="102" cy="23" r="4.2" fill="#E8EEF8"/>
+        <circle class="buddy__pupil" cx="103" cy="23" r="2" fill="#0A0C10"/>
+        <circle cx="112" cy="26" r="1" fill="#1A2540" opacity="0.6"/>
+      </g>
+    </svg>
   </div>
 
   <!-- ============ NAV ============ -->
@@ -69,7 +100,7 @@
     <div class="nav__actions">
       <a class="btn btn--discord btn--sm magnetic" href="https://discord.gg/gpvB4GEtaG" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-        Discord
+        <span class="btn__label">Discord</span>
       </a>
       <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
         <span></span><span></span><span></span>
@@ -94,8 +125,9 @@
 
         <p class="hero__sub reveal">
           Clean-room revival of the final Rules of Survival PC client. NetEase's servers are gone —
-          we rebuilt the dead half on <span class="mono accent">127.0.0.1</span>. Low budget, no
-          investors, one shark. <strong>Play screen reached. Login wall standing by.</strong>
+          so <strong>I'm rebuilding the dead half</strong> on <span class="mono accent">127.0.0.1</span>.
+          One solo dev, an AI that types fast, zero budget, one shark.
+          <strong>Play screen reached. Login wall standing by.</strong>
         </p>
 
         <div class="hero__cta reveal">
@@ -129,16 +161,16 @@
         <div class="briefing__manifesto reveal">
           <p>
             Rules of Survival went dark on <strong>27 June 2022</strong>. The client still sits on a
-            million drives, screaming into dead servers. We're a volunteer team who got tired of
-            waiting — so we're preserving the final PC build and rebuilding the server side from
-            scratch, on localhost, clean-room.
+            million drives, screaming into dead servers. I got tired of waiting — so this project
+            preserves the final PC build and rebuilds the server side from scratch, on localhost,
+            clean-room.
           </p>
           <p>
             Game is <strong>Unbound</strong>. Server is <strong>Unbounded</strong>. No stolen assets,
-            no shady launchers, no investors breathing down our necks. The plan stays honest: when
-            it runs, the logs say so first — then this page.
+            no shady launchers, no investors. The plan stays honest: when it runs, the logs say so
+            first — then this page.
           </p>
-          <p class="briefing__shark mono">▲ THE ISLAND HAS TEETH. SO DO WE.</p>
+          <p class="briefing__shark mono">▲ THE ISLAND HAS TEETH. SO DO I.</p>
         </div>
 
         <dl class="briefing__stats reveal">
@@ -151,12 +183,12 @@
             <dd><span class="count" data-count="99.995" data-decimals="3">0</span>%</dd>
           </div>
           <div class="bstat">
-            <dt class="mono">ENDPOINTS RECOVERED</dt>
+            <dt class="mono">ENDPOINTS MAPPED</dt>
             <dd><span class="count" data-count="175">0</span></dd>
           </div>
           <div class="bstat">
-            <dt class="mono">CIPHERS IN THE GAME</dt>
-            <dd><span class="count" data-count="2">0</span></dd>
+            <dt class="mono">DEVELOPERS</dt>
+            <dd><span class="count" data-count="1">0</span> <span class="bstat__plus">+ AI</span></dd>
           </div>
         </dl>
       </div>
@@ -167,7 +199,7 @@
       <header class="section__head reveal">
         <p class="kicker mono"><b>02</b> / PIPELINE</p>
         <h2 data-scramble>Door by <em>door</em></h2>
-        <p class="section__lede">The real tracker — straight from the project log. Hover a bar for the receipts.</p>
+        <p class="section__lede">The real tracker — straight from the project log. Hover a bar for the story.</p>
       </header>
 
       <ol class="pipeline reveal">
@@ -178,7 +210,7 @@
             <span class="pipe__state mono">DONE</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">186,629 records recovered. NXPK container fully decoded — only neox.xml plaintext left.</p>
+          <p class="pipe__detail">Every archive in the client is open. One stubborn config file still wants a live session.</p>
         </li>
         <li class="pipe pipe--done" data-w="100">
           <div class="pipe__top">
@@ -187,7 +219,7 @@
             <span class="pipe__state mono">DONE</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">no_patch flags + plist stub → launcher answers HTTP 200, bar goes Ready.</p>
+          <p class="pipe__detail">The launcher's patch check now gets its answers locally. Bar goes Ready.</p>
         </li>
         <li class="pipe pipe--done" data-w="100">
           <div class="pipe__top">
@@ -196,7 +228,7 @@
             <span class="pipe__state mono">DONE</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">PC-ASIA renders Smooth + Fast from our Unbounded stub.</p>
+          <p class="pipe__detail">Server select populates from the local stack — regions render, the game believes.</p>
         </li>
         <li class="pipe pipe--done" data-w="100">
           <div class="pipe__top">
@@ -205,7 +237,7 @@
             <span class="pipe__state mono">DONE</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">ros64 boots all the way to the PLAY button — hit 2026-10-11.</p>
+          <p class="pipe__detail">The client boots all the way to the PLAY button — hit 2026-10-11.</p>
         </li>
         <li class="pipe pipe--active" data-w="45">
           <div class="pipe__top">
@@ -214,7 +246,7 @@
             <span class="pipe__state mono pipe__state--live"><span class="led" aria-hidden="true"></span> ACTIVE</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">UniSDK wall: local identity injected, QR poll captured, TLS handshake now trusted. This is the current fight.</p>
+          <p class="pipe__detail">The login wall — native SDK, not game code. A clean-room way through is under test. This is the current fight.</p>
         </li>
         <li class="pipe pipe--locked" data-w="0">
           <div class="pipe__top">
@@ -232,7 +264,7 @@
             <span class="pipe__state mono">LOCKED</span>
           </div>
           <div class="pipe__track"><div class="pipe__fill"></div></div>
-          <p class="pipe__detail">Local match on Unbounded. Not started — and won't be faked.</p>
+          <p class="pipe__detail">A local match on Unbounded. Not started — and won't be faked.</p>
         </li>
       </ol>
     </section>
@@ -247,7 +279,7 @@
       <header class="section__head reveal">
         <p class="kicker mono"><b>03</b> / DEVLOG</p>
         <h2 data-scramble>Milestones, <em>not noise</em></h2>
-        <p class="section__lede">Every door we actually kicked open. Auto-generated from the project log.</p>
+        <p class="section__lede">Every door that actually fell. Outcomes only — the how stays private.</p>
       </header>
 
       <div class="devlog reveal">
@@ -261,7 +293,7 @@
 
         <ol class="devlog__list" id="devlogList"></ol>
 
-        <p class="devlog__foot mono">MILESTONES ONLY — THE FULL SCRATCH LOG LIVES IN THE PROJECT'S PROGRESS.md</p>
+        <p class="devlog__foot mono">OUTCOMES PUBLIC — METHODS PRIVATE. THE SCRATCH LOG LIVES IN THE PROJECT LOG.</p>
       </div>
     </section>
 
@@ -275,43 +307,43 @@
       <div class="intel reveal">
         <article class="icard">
           <p class="icard__id mono">INT-01</p>
-          <h3>Two ciphers. That's it.</h3>
-          <p>The entire game uses <span class="mono accent">none</span> + <span class="mono accent">rotor</span>. No third cipher ever existed — the escalation we feared never happened.</p>
+          <h3>Two layers. That's it.</h3>
+          <p>The whole client ran on two protection layers. No exotic third scheme ever appeared — the escalation we feared never happened.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-02</p>
-          <h3>Rotor key never changed</h3>
-          <p>Same key since the 32-bit era. One derivation, done forever — every archive fell the same way.</p>
+          <h3>Never upgraded</h3>
+          <p>The protection scheme never changed across years of builds. One solution opened every archive, every time.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-03</p>
-          <h3>172,104 hashes</h3>
-          <p><span class="mono">md5_list</span> handed us a full path → MD5 manifest of the client. Instant integrity oracle for everything we unpack.</p>
+          <h3>172,104 checksums</h3>
+          <p>The client shipped with a full integrity manifest of itself. Everything we unpack can be verified instantly against it.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-04</p>
           <h3>175 endpoints</h3>
-          <p>Harvested from decrypted scripts — including the plist template. That file is Unbounded's route map.</p>
+          <p>Every server address the client still expects is catalogued. That list is Unbounded's route map.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-05</p>
-          <h3>UNISDK_LOGIN_JSON</h3>
-          <p>The client reads a base64 identity blob from the environment. We mint our own — clean-room, no injector hooks.</p>
+          <h3>The SDK wants an identity</h3>
+          <p>The login SDK expects a signed identity blob. There's a clean-room way to supply one — no hooks, no cracked binaries.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-06</p>
-          <h3>The QR lives in the SDK</h3>
-          <p><span class="mono">qr.mpsdk.easebar.com</span> — the login wall is native UniSDK, not in the game scripts. Hence the fight.</p>
+          <h3>The wall isn't in the game</h3>
+          <p>The login dialog lives inside the native SDK, not the game scripts. Hence the fight — and hence the progress.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-07</p>
           <h3>Cert: accepted</h3>
-          <p>The launcher trusted our self-signed leaf as-is. No CA ceremony — one less wall between us and the boot.</p>
+          <p>The launcher trusted the local certificate as-is. No trust ceremony — one less wall between cold start and boot.</p>
         </article>
         <article class="icard">
           <p class="icard__id mono">INT-08</p>
-          <h3>Two empty files skip the patcher</h3>
-          <p>Empty <span class="mono">no_patch.txt</span> + <span class="mono">no_first_patch.txt</span> → the in-game updater stands down completely.</p>
+          <h3>The patcher stands down</h3>
+          <p>The in-game updater checks for two small flags before it wakes. Present them, and it stands down completely.</p>
         </article>
       </div>
     </section>
@@ -325,7 +357,7 @@
     <section class="section" id="target">
       <header class="section__head reveal">
         <p class="kicker mono"><b>05</b> / TARGET</p>
-        <h2 data-scramble>What we're hunting <em>back</em></h2>
+        <h2 data-scramble>What's coming <em>back</em></h2>
       </header>
 
       <div class="modes reveal">
@@ -353,7 +385,7 @@
 
       <div class="maps reveal">
         <article class="mcard tilt">
-          <div class="mcard__glare" aria-hidden="true"></div>
+          <div class="mcard__glare" aria-hidden="false"></div>
           <div class="mcard__head">
             <span class="chip">TARGET MAP</span>
             <h3>Fearless Fiord</h3>
@@ -367,7 +399,7 @@
         </article>
 
         <article class="mcard tilt">
-          <div class="mcard__glare" aria-hidden="true"></div>
+          <div class="mcard__glare" aria-hidden="false"></div>
           <div class="mcard__head">
             <span class="chip">TARGET MAP</span>
             <h3>Ghillie Island</h3>
@@ -417,7 +449,7 @@
           <ul class="access__list">
             <li><span class="tooth-dot" aria-hidden="true"></span>Boot the local build when auth falls</li>
             <li><span class="tooth-dot" aria-hidden="true"></span>Break things loudly in Discord</li>
-            <li><span class="tooth-dot" aria-hidden="true"></span>Tell us what classic feels right</li>
+            <li><span class="tooth-dot" aria-hidden="true"></span>Tell me what classic feels right</li>
             <li><span class="tooth-dot" aria-hidden="true"></span>Keep the launcher drama-free</li>
           </ul>
           <p class="access__aside-note">One account per tester. Progress may wipe. Sharks may be involved.</p>
@@ -442,13 +474,13 @@
           <button class="faq__q" aria-expanded="false">
             <span>Is this official?</span><span class="faq__icon" aria-hidden="true"></span>
           </button>
-          <div class="faq__a"><p>No. Fan preservation project. Not affiliated with or endorsed by NetEase. Rules of Survival © NetEase, Inc. We redistribute no original game assets.</p></div>
+          <div class="faq__a"><p>No. Fan preservation project run by one developer. Not affiliated with or endorsed by NetEase. Rules of Survival © NetEase, Inc. No original game assets are redistributed.</p></div>
         </div>
         <div class="faq__item">
           <button class="faq__q" aria-expanded="false">
             <span>Can I play it right now?</span><span class="faq__icon" aria-hidden="true"></span>
           </button>
-          <div class="faq__a"><p>Not yet. The client boots to the play screen on our local server — the UniSDK login wall is the current fight. When a match runs, testers hear first, then this page updates.</p></div>
+          <div class="faq__a"><p>Not yet. The client boots to the play screen against a local server — the login wall is the current fight. When a match runs, testers hear first, then this page updates.</p></div>
         </div>
         <div class="faq__item">
           <button class="faq__q" aria-expanded="false">
@@ -464,9 +496,15 @@
         </div>
         <div class="faq__item">
           <button class="faq__q" aria-expanded="false">
+            <span>Who's behind it?</span><span class="faq__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq__a"><p>One solo developer with an AI assistant doing half the typing. No studio, no investors, no team page — just the shark emblem and a very long project log.</p></div>
+        </div>
+        <div class="faq__item">
+          <button class="faq__q" aria-expanded="false">
             <span>Why a shark?</span><span class="faq__icon" aria-hidden="true"></span>
           </button>
-          <div class="faq__a"><p>Because sharks are awesome and the emblem looked right at home on cobalt wings. ▲ Any other answer is classified.</p></div>
+          <div class="faq__a"><p>Because sharks are awesome and the emblem looked right at home on cobalt wings. ▲ Any other answer is classified. It also swims after your cursor now — consider it morale.</p></div>
         </div>
       </div>
     </section>
@@ -499,7 +537,7 @@
       </nav>
     </div>
     <div class="footer__legal">
-      <p>© 2026 Rules of Survival: Unbound — fan preservation project. Not affiliated with, sponsored by, endorsed by, or officially connected to NetEase Games.</p>
+      <p>© 2026 Rules of Survival: Unbound — fan preservation project by one developer. Not affiliated with, sponsored by, endorsed by, or officially connected to NetEase Games.</p>
       <p>Rules of Survival is © NetEase, Inc. All trademarks, names, logos and related intellectual property remain the property of their respective owners. This site redistributes no original game assets. No revenue is generated by this project.</p>
     </div>
   </footer>
