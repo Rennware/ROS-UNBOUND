@@ -1,50 +1,55 @@
-# ROS: Unbound — Coming Soon site
+# ROS: Unbound — Command Deck site
 
-Single-page static teaser for **Rules of Survival: Unbound** (`https://github.com/Rennware/ROS-UNBOUND`).
+Single-page static site for **Rules of Survival: Unbound** (`https://github.com/Rennware/ROS-UNBOUND`).
+Live: `https://rennware.github.io/ROS-UNBOUND/`
 
 ## What's here
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Nav, hero (emblem + tagline), status stats, Discord CTA, legal footer |
-| `css/styles.css` | Cobalt palette sampled from `ROSU.png`, dark theme, responsive |
-| `js/main.js` | Nav scroll state, entrance reveals, hero logo parallax (desktop) |
-| `assets/img/rosu.png` | Official mark (source: `../ROSU.png`) |
-| `assets/favicon*` / `og-image.png` | Derived from the mark (emblem crop) |
+| `index.html` | Asymmetric hero + boot line, Pipeline meters, milestone Devlog, Intel cards, Target (modes/maps), Access panel (tester apply), FAQ, legal footer |
+| `css/styles.css` | Chakra Petch + cobalt palette from the official marks, shark motifs (tooth cards, fin dividers), responsive |
+| `js/devlog.js` | **Auto-generated** milestone feed — do not edit by hand |
+| `js/main.js` | Scroll progress + swimming fin, boot typing, reveals, counters, devlog render/filter, accordions, magnetic buttons, scramble headings, emblem tilt, map glare |
+| `assets/img/*` | User-supplied marks (emblem, wordmark) — ours, not NetEase assets |
+| `assets/favicon*` / `og-image.png` | Derived from our emblem |
 
-## Palette (sampled from ROSU.png)
+## Devlog feed
 
-| Token | Hex | Source |
-|-------|-----|--------|
-| `--cobalt` | `#285090` | Wings + UNBOUND wordmark |
-| `--cobalt-bright` | `#4068B0` | Highlight blues |
-| `--cobalt-deep` | `#102858` | Wing shadow |
-| `--steel` | `#98989A` | Emblem metal frame |
-| `--bg` | `#0A0C10` | Near-black |
+`js/devlog.js` is generated from `PROGRESS.md` (milestone entries only):
+
+```powershell
+# from notes/Website-Agent/
+python tools/build-devlog.py
+```
+
+Re-run whenever new milestones land in `PROGRESS.md`. Entries carry `date / title / tag / done[]`
+with `tag` ∈ `DECODE | SERVER | AUTH | CLIENT | LAUNCHER`.
+
+## Palette (sampled from the official marks)
+
+| Token | Hex |
+|-------|-----|
+| `--cobalt` | `#385090` |
+| `--cobalt-bright` | `#4A6AB8` |
+| `--cobalt-accent` | `#5B82D6` |
+| `--cobalt-deep` | `#203868` |
+| `--steel` | `#98989A` |
+| `--bg` | `#0A0C10` |
 
 ## Preview locally
 
-Just open `index.html` in a browser (`file://` works), or:
-
 ```powershell
 python -m http.server 8080 --directory .
-# → http://localhost:8080
+# → http://localhost:8080  (or just open index.html via file://)
 ```
 
-## Deploy to GitHub Pages
+## Deploy
 
-Repo: `https://github.com/Rennware/ROS-UNBOUND`
-
-**Option A — publish from a branch folder (simplest):**
-1. Push these `public/` contents to a `gh-pages` branch (root of that branch).
-2. Repo → *Settings → Pages → Source*: `Deploy from a branch` → `gh-pages` / `/ (root)`.
-
-**Option B — Actions workflow** (if you prefer main-branch pushes): add a Pages workflow that uploads this `public/` directory. Ask and one can be added.
-
-**Option C — root publishing:** copy `public/*` to the repo root of a `site` branch if you want `<user>.github.io/ROS-UNBOUND/`.
-
-Custom domain later: add a `CNAME` file in the published root.
+Site files live at the **repo root** (`main` branch) — GitHub Pages publishes automatically.
+Copy from `notes/Website-Agent/public/` → repo root, commit, push `main`.
 
 ## Legal
 
-Footer includes the required disclaimer: fan preservation project, not affiliated with NetEase; original game © NetEase, Inc.; no redistribution of original assets. Keep this on every page.
+Footer disclaimer on every page: fan preservation project, not affiliated with NetEase;
+original game © NetEase, Inc.; no redistribution of original assets. Keep it on every page.
