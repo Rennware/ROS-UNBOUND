@@ -265,7 +265,7 @@ body::after {
   position: fixed;
   top: 0; left: 0;
   z-index: -1;
-  width: 136px;
+  width: 148px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.8s ease;
@@ -306,6 +306,8 @@ body::after {
   animation: pectoralFlex 2.6s ease-in-out infinite;
 }
 
+.buddy__pectoral--far { animation-delay: -1.3s; }
+
 @keyframes pectoralFlex {
   0%, 100% { transform: rotate(0deg); }
   50%      { transform: rotate(-8deg); }
@@ -316,6 +318,131 @@ body::after {
   border-color: var(--cobalt-accent);
   box-shadow: 0 0 0 1px var(--line-hot), 0 14px 36px -14px var(--cobalt-glow);
 }
+
+/* ---------- Music: standalone toggle + consent dialog ---------- */
+.music__btn {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px; height: 42px;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  background: rgba(14, 18, 25, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, opacity 0.3s ease;
+  opacity: 0.85;
+}
+.music__btn:hover { color: var(--text); border-color: var(--cobalt-accent); opacity: 1; }
+.music__btn.is-playing {
+  color: var(--cobalt-accent);
+  border-color: var(--line-hot);
+  background: rgba(56, 80, 144, 0.25);
+  opacity: 1;
+}
+
+.music__icon { display: block; }
+.music__btn.is-playing .music__icon--on { display: block; }
+.music__btn.is-playing .music__icon--off { display: none; }
+.music__btn:not(.is-playing) .music__icon--on { display: none; }
+.music__btn:not(.is-playing) .music__icon--off { display: block; }
+
+.music__eq {
+  position: absolute;
+  right: 3px; bottom: 3px;
+  display: none;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 8px;
+}
+.music__btn.is-playing .music__eq { display: flex; }
+.music__eq i {
+  width: 2px;
+  background: var(--cobalt-accent);
+  animation: eqBar 0.85s ease-in-out infinite;
+}
+.music__eq i:nth-child(1) { height: 40%; animation-delay: 0s; }
+.music__eq i:nth-child(2) { height: 80%; animation-delay: 0.15s; }
+.music__eq i:nth-child(3) { height: 55%; animation-delay: 0.3s; }
+
+@keyframes eqBar {
+  0%, 100% { transform: scaleY(0.35); }
+  50%      { transform: scaleY(1); }
+}
+
+/* consent dialog */
+.mdialog {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.mdialog[hidden] { display: none; }
+
+.mdialog__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 11, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mdialog__panel {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 28px 28px 24px;
+  background: rgba(14, 18, 25, 0.96);
+  border: 1px solid var(--line-hot);
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 80, 144, 0.15);
+  animation: dialogIn 0.28s ease;
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.mdialog__kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  margin: 0 0 14px;
+}
+
+.mdialog__title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 10px;
+}
+.mdialog__title em { font-style: normal; color: var(--cobalt-accent); }
+
+.mdialog__copy {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  margin: 0 0 22px;
+}
+
+.mdialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mdialog__actions .btn--primary { min-width: 150px; }
 
 /* ---------- Shared ---------- */
 .led {
@@ -1502,6 +1629,7 @@ body::after {
   .buddy { display: none; }
   .bubbles { display: none; }
   .buddy__tail, .buddy__pectoral { animation: none; }
+  .music__eq i { animation: none; }
 }
 
 /* ============================================================
@@ -1628,6 +1756,11 @@ body::after {
   .hero__cta { width: 100%; }
   .hero__cta .btn { flex: 1 1 auto; justify-content: center; }
   .join .btn--lg { width: auto; min-width: 240px; }
+
+  .music__btn { right: 10px; bottom: 10px; width: 38px; height: 38px; }
+
+  .mdialog__panel { padding: 22px 20px 20px; }
+  .mdialog__title { font-size: 24px; }
 }
 
 /* --- tiny phones --- */

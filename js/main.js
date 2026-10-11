@@ -646,7 +646,7 @@
       const deg = heading * (180 / Math.PI);
 
       buddy.style.transform =
-        "translate(" + (bx - 64).toFixed(1) + "px," + (by + bob - 34).toFixed(1) + "px)";
+        "translate(" + (bx - 74).toFixed(1) + "px," + (by + bob - 34).toFixed(1) + "px)";
 
       if (wrap) {
         wrap.style.transform = "rotate(" + deg.toFixed(1) + "deg)";
@@ -675,5 +675,60 @@
         rafBuddy = requestAnimationFrame(tickBuddy);
       }
     });
+  }
+
+  /* ---------- Music: login theme (file only) ---------- */
+  const musicBtn = $("#musicBtn");
+  const audioEl = $("#ostAudio");
+  const musicDialog = $("#musicDialog");
+  const mdialogPlay = $("#mdialogPlay");
+  const mdialogMute = $("#mdialogMute");
+  const mdialogBackdrop = $("#mdialogBackdrop");
+
+  if (musicBtn && audioEl) {
+    const LS_KEY = "rosu-music"; // "on" | "off"
+    audioEl.volume = 0.5;
+
+    const setPlayingUI = (on) => {
+      musicBtn.classList.toggle("is-playing", on);
+      musicBtn.setAttribute("aria-pressed", String(on));
+      musicBtn.setAttribute("aria-label", on ? "Pause music" : "Play music");
+    };
+
+    const play = () => {
+      const p = audioEl.play();
+      if (p && p.catch) p.catch(() => setPlayingUI(false));
+      setPlayingUI(true);
+      try { localStorage.setItem(LS_KEY, "on"); } catch (_) {}
+    };
+
+    const pause = () => {
+      audioEl.pause();
+      setPlayingUI(false);
+      try { localStorage.setItem(LS_KEY, "off"); } catch (_) {}
+    };
+
+    musicBtn.addEventListener("click", () => {
+      audioEl.paused ? play() : pause();
+    });
+
+    audioEl.addEventListener("error", () => {
+      setPlayingUI(false);
+      musicBtn.title = "Login theme file unavailable";
+    });
+
+    // consent dialog
+    if (musicDialog && mdialogPlay && mdialogMute) {
+      const closeDialog = () => { musicDialog.hidden = true; };
+
+      mdialogPlay.addEventListener("click", () => { closeDialog(); play(); });
+      mdialogMute.addEventListener("click", () => { closeDialog(); pause(); });
+      if (mdialogBackdrop) mdialogBackdrop.addEventListener("click", closeDialog);
+
+      // show on every load (user gesture enables autoplay)
+      musicDialog.hidden = false;
+      // focus the primary choice for keyboard users
+      requestAnimationFrame(() => mdialogPlay.focus());
+    }
   }
 })();
